@@ -1,6 +1,6 @@
 import 'package:blog/screens/login.dart';
 import 'package:blog/screens/post_screen.dart';
-import 'package:blog/screens/postform.dart';
+import 'package:blog/screens/post_form.dart';
 import 'package:blog/screens/profile.dart';
 import 'package:blog/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int currentIndex = 0;
+  int currIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class _HomeState extends State<Home> {
               icon: Icon(Icons.exit_to_app))
         ],
       ),
-      body: currentIndex == 0 ? PostScreen() : Profile(),
+      body: currIndex == 0 ? PostScreen() : Profile(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context)
@@ -50,9 +50,12 @@ class _HomeState extends State<Home> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Contacts')
           ],
-          currentIndex: currentIndex,
+          currentIndex: currIndex,
           onTap: (val) {
-            currentIndex = val;
+            setState(() {
+              currIndex = val;
+            });
+            
           },
         ),
       ),

@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:blog/constant.dart';
+import 'package:blog/models/api_response.dart';
+import 'package:blog/screens/login.dart';
+import 'package:blog/services/post_service.dart';
+import 'package:blog/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -28,6 +32,24 @@ class _PostFormState extends State<PostForm> {
     }
   }
 
+  void _createPost() async {
+    String? image = _imageFile == null ? null : getStringImage(_imageFile);
+    ApiResponse response = await createPost(bodyController.text, image);
+
+    if (response.error == null) {
+      Navigator.of(context).pop();
+    } else if (response.error == unAuthorized) {
+      logout().then((value) => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => Login()), (route) => false));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${response.error}')));
+      setState(() {
+        _loading = !_loading;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,11 +66,11 @@ class _PostFormState extends State<PostForm> {
                   width: MediaQuery.of(context).size.width,
                   height: 200,
                   decoration: BoxDecoration(
-                    image: _imageFile == null ? null :DecorationImage(
-                      image: FileImage(_imageFile?? File('')),
-                      fit: BoxFit.cover
-                      )
-                  ),
+                      image: _imageFile == null
+                          ? null
+                          : DecorationImage(
+                              image: FileImage(_imageFile ?? File('')),
+                              fit: BoxFit.cover)),
                   child: Center(
                     child: IconButton(
                         onPressed: () {
@@ -58,7 +80,6 @@ class _PostFormState extends State<PostForm> {
                           Icons.image,
                           size: 50,
                           color: Colors.black38,
-                          
                         )),
                   ),
                 ),
@@ -87,6 +108,7 @@ class _PostFormState extends State<PostForm> {
                       setState(() {
                         _loading = !_loading;
                       });
+                      _createPost();
                     }
                   }),
                 ),

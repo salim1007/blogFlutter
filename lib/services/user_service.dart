@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:blog/constant.dart';
 import 'package:blog/models/api_response.dart';
 import 'package:http/http.dart' as http;
@@ -97,9 +98,9 @@ Future<ApiResponse> getUserDetail() async {
 }
 
 //get token...
- Future<String> getToken() async {
+Future<String> getToken() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
-  return pref.getString('token')?? '';
+  return pref.getString('token') ?? '';
 }
 
 //get user id...
@@ -112,4 +113,10 @@ Future<int> getUserId() async {
 Future<bool> logout() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   return await pref.remove('token');
+}
+
+//get base64 encoded image.....
+String? getStringImage(File? file) {
+  if (file == null) return null;
+  return base64Encode(file.readAsBytesSync());
 }

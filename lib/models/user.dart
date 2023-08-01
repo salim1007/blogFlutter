@@ -18,4 +18,6 @@ class User {
       
     );
   }
+
+  get length => null;
 }
