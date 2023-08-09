@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const baseURL = "http://192.168.97.36:8000/api";
+const baseURL = "http://192.168.130.36:8000/api";
 const loginURL = baseURL + '/login';
 const registerURL = baseURL + '/register';
 const logoutURL = baseURL + '/logout';
@@ -53,7 +53,7 @@ Row loginRegisterHint(String text, String label, Function onTap) {
 }
 
 Expanded KlikeAndComment(
-     int value, IconData icon, Color color, Function onTap(),) {
+     int value, IconData icon, Color color, Function onTap(), ) {
   return Expanded(
       child: Material(
     child: InkWell(

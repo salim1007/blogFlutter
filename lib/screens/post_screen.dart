@@ -1,11 +1,13 @@
 import 'package:blog/constant.dart';
 import 'package:blog/models/api_response.dart';
 import 'package:blog/screens/login.dart';
+import 'package:blog/screens/post_form.dart';
 import 'package:blog/services/post_service.dart';
 import 'package:blog/services/user_service.dart';
 import 'package:flutter/material.dart';
 
 import '../models/post.dart';
+import 'comment_screen.dart';
 
 class PostScreen extends StatefulWidget {
   const PostScreen({super.key});
@@ -37,6 +39,40 @@ class _PostScreenState extends State<PostScreen> {
     } else if (response.error == unAuthorized) {
       logout().then((value) => Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => Login()), (route) => false));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${response.error}')));
+    }
+  }
+
+  void _handlePostLikeOrDislike(int postId) async {
+    ApiResponse response = await likeUnlikePost(postId);
+
+    if (response.error == null) {
+      retrievePosts();
+    } else if (response.error == unAuthorized) {
+      logout().then((value) => {
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => Login()),
+                (route) => false)
+          });
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${response.error}')));
+    }
+  }
+
+  void _handleDeletePost(int postId) async {
+    ApiResponse response = await deletePost(postId);
+
+    if (response.error == null) {
+      retrievePosts();
+    } else if (response.error == unAuthorized) {
+      logout().then((value) => {
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => Login()),
+                (route) => false)
+          });
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('${response.error}')));
@@ -117,9 +153,14 @@ class _PostScreenState extends State<PostScreen> {
                                   ],
                                   onSelected: (val) {
                                     if (val == 'edit') {
-                                      //edit......
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                              builder: (context) => PostForm(
+                                                    title: 'Edit Post',
+                                                    post: post,
+                                                  )));
                                     } else {
-                                      //delete......
+                                      _handleDeletePost(post.id ?? 0);
                                     }
                                   },
                                 )
@@ -133,7 +174,7 @@ class _PostScreenState extends State<PostScreen> {
                       post.image != null
                           ? Container(
                               width: MediaQuery.of(context).size.width,
-                              height: 180,
+                              height: 400,
                               decoration: BoxDecoration(
                                   image: DecorationImage(
                                       image: NetworkImage('${post.image}'),
@@ -148,14 +189,13 @@ class _PostScreenState extends State<PostScreen> {
                             //follow the odrer defined in constant.dart......
 
                             post.likesCount ?? 0,
-                            post.selfLiked == true
-                                ? Icons.favorite
-                                : Icons.favorite_outline,
-                            post.selfLiked == true
-                                ? Colors.red
-                                : Colors.black54,
+                            post.likesCount == 0
+                                ? Icons.favorite_outline
+                                : Icons.favorite,
+                            post.likesCount == 0 ? Colors.black54 : Colors.red,
                             () {
-                              throw 5;
+                              _handlePostLikeOrDislike(post.id ?? 0);
+                              return () {};
                             },
                           ),
                           Container(
@@ -168,7 +208,11 @@ class _PostScreenState extends State<PostScreen> {
                             Icons.sms_outlined,
                             Colors.black54,
                             () {
-                              throw 4;
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => CommentScreen(
+                                    postId: post.id,
+                                  )));
+                              return () {};
                             },
                           )
                         ],

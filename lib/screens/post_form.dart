@@ -8,8 +8,13 @@ import 'package:blog/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/post.dart';
+
 class PostForm extends StatefulWidget {
-  const PostForm({super.key});
+  final Post? post;
+  final String? title;
+
+  const PostForm({this.post, this.title});
 
   @override
   State<PostForm> createState() => _PostFormState();
@@ -50,11 +55,39 @@ class _PostFormState extends State<PostForm> {
     }
   }
 
+  void _editPost(postId) async {
+    ApiResponse response = await editPost(postId, bodyController.text);
+
+    if (response.error == null) {
+      Navigator.of(context).pop();
+    } else if (response.error == unAuthorized) {
+      logout().then((value) => {
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => Login()),
+                (route) => false)
+          });
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${response.error}')));
+      setState(() {
+        _loading = !_loading;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    if (widget.post != null) {
+      bodyController.text = widget.post!.body?? ''; 
+    }
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add New Post'),
+        title: Text('${widget.title}'),
       ),
       body: _loading
           ? Center(
@@ -62,27 +95,29 @@ class _PostFormState extends State<PostForm> {
             )
           : ListView(
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 200,
-                  decoration: BoxDecoration(
-                      image: _imageFile == null
-                          ? null
-                          : DecorationImage(
-                              image: FileImage(_imageFile ?? File('')),
-                              fit: BoxFit.cover)),
-                  child: Center(
-                    child: IconButton(
-                        onPressed: () {
-                          getImage();
-                        },
-                        icon: Icon(
-                          Icons.image,
-                          size: 50,
-                          color: Colors.black38,
-                        )),
-                  ),
-                ),
+                widget.post != null
+                    ? SizedBox()
+                    : Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 200,
+                        decoration: BoxDecoration(
+                            image: _imageFile == null
+                                ? null
+                                : DecorationImage(
+                                    image: FileImage(_imageFile ?? File('')),
+                                    fit: BoxFit.cover)),
+                        child: Center(
+                          child: IconButton(
+                              onPressed: () {
+                                getImage();
+                              },
+                              icon: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.black38,
+                              )),
+                        ),
+                      ),
                 Form(
                     key: postformkey,
                     child: Padding(
@@ -104,11 +139,15 @@ class _PostFormState extends State<PostForm> {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: KTextButton('Post', () {
-                    if (postformkey.currentState!.validate()) {
+                    if (postformkey.currentState!.validate()) { 
                       setState(() {
                         _loading = !_loading;
                       });
-                      _createPost();
+                      if (widget.post == null) {
+                        _createPost();
+                      } else {
+                        _editPost(widget.post!.id ?? 0);
+                      }
                     }
                   }),
                 ),
